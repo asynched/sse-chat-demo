@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSE Demo</title>
+  </head>
+  <body>
+    <h1>SSE | Chat</h1>
+    <p>Send messages</p>
+    <p>Connection status: <span class="status">Disconnected</span></p>
+    <form>
+      <input type="text" name="message" />
+      <button type="submit">Send</button>
+    </form>
+    <ul></ul>
+  </body>
+  <script>
+    const sse = new EventSource('/chat')
+    const status = document.querySelector('.status')
+    const list = document.querySelector('ul')
+
+    sse.addEventListener('open', () => {
+      console.log('Connection opened')
+      status.textContent = 'Connected'
+    })
+
+    sse.addEventListener('error', () => {
+      console.log('Connection error')
+      status.textContent = 'Disconnected'
+    })
+
+    sse.addEventListener('message', ({ data }) => {
+      const li = document.createElement('li')
+
+      li.appendChild(document.createTextNode(data))
+
+      list.appendChild(li)
+    })
+
+    const form = document.querySelector('form')
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault()
+
+      const formData = new FormData(form)
+      const message = formData.get('message')
+
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: message,
+        }),
+      })
+
+      if (response.ok) {
+        return form.reset()
+      }
+
+      alert('Could not send message')
+    })
+  </script>
+</html>
